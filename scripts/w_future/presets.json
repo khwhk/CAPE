@@ -1,0 +1,279 @@
+{
+  "BE": {
+    "long": {
+      "target": "OT",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "OT",
+      "seq_len": 168,
+      "horizon": 24,
+      "window_norm": true,
+      "denoise_mae": 0.2,
+      "target_stats": true,
+      "response_input": "raw",
+      "selection_objective": "balanced",
+      "log_sigma_mean": -0.5
+    }
+  },
+  "Colbun": {
+    "long": {
+      "target": "Water_Level_daily_avg",
+      "seq_len": 180,
+      "horizon": 30,
+      "epochs": 80,
+      "patience": 10,
+      "window_norm": true,
+      "denoise_mae": 0.2,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "coordinate_center": "last",
+      "norm_floor": 0.5,
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "Water_Level_daily_avg",
+      "seq_len": 60,
+      "horizon": 10,
+      "response_input": "raw",
+      "selection_objective": "balanced"
+    }
+  },
+  "DE": {
+    "long": {
+      "target": "OT",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "OT",
+      "seq_len": 168,
+      "horizon": 24,
+      "window_norm": true,
+      "denoise_mae": 0.2,
+      "target_stats": true,
+      "response_input": "raw",
+      "selection_objective": "balanced",
+      "log_sigma_mean": -0.5
+    }
+  },
+  "Energy": {
+    "long": {
+      "target": "Thermoelectric",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "Thermoelectric",
+      "seq_len": 168,
+      "horizon": 24,
+      "response_input": "raw",
+      "selection_objective": "balanced"
+    }
+  },
+  "FR": {
+    "long": {
+      "target": "OT",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "OT",
+      "seq_len": 168,
+      "horizon": 24,
+      "window_norm": true,
+      "denoise_mae": 0.2,
+      "target_stats": true,
+      "response_input": "raw",
+      "selection_objective": "balanced",
+      "log_sigma_mean": -0.5
+    }
+  },
+  "NP": {
+    "long": {
+      "target": "OT",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "OT",
+      "seq_len": 168,
+      "horizon": 24,
+      "window_norm": true,
+      "denoise_mae": 0.2,
+      "target_stats": true,
+      "response_input": "raw",
+      "selection_objective": "balanced",
+      "log_sigma_mean": -0.5
+    }
+  },
+  "PJM": {
+    "long": {
+      "target": "OT",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "OT",
+      "seq_len": 168,
+      "horizon": 24,
+      "window_norm": true,
+      "denoise_mae": 0.2,
+      "target_stats": true,
+      "response_input": "raw",
+      "selection_objective": "balanced",
+      "log_sigma_mean": -0.5
+    }
+  },
+  "Rapel": {
+    "long": {
+      "target": "Water_Level_daily_avg",
+      "seq_len": 180,
+      "horizon": 30,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "Water_Level_daily_avg",
+      "seq_len": 60,
+      "horizon": 10,
+      "response_input": "raw",
+      "selection_objective": "balanced"
+    }
+  },
+  "Sdwpfh1": {
+    "long": {
+      "target": "Patv",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "Patv",
+      "seq_len": 168,
+      "horizon": 24,
+      "response_input": "raw",
+      "selection_objective": "balanced"
+    }
+  },
+  "Sdwpfh2": {
+    "long": {
+      "target": "Patv",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "Patv",
+      "seq_len": 168,
+      "horizon": 24,
+      "response_input": "raw",
+      "selection_objective": "balanced"
+    }
+  },
+  "Sdwpfm1": {
+    "long": {
+      "target": "Patv",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "Patv",
+      "seq_len": 168,
+      "horizon": 24,
+      "response_input": "raw",
+      "selection_objective": "balanced"
+    }
+  },
+  "Sdwpfm2": {
+    "long": {
+      "target": "Patv",
+      "seq_len": 720,
+      "horizon": 360,
+      "window_norm": true,
+      "edm_backbone": "dual",
+      "target_stats": true,
+      "response_gain_scale": 0.2,
+      "selection_objective": "balanced",
+      "d_model": 64,
+      "layers": 2
+    },
+    "short": {
+      "target": "Patv",
+      "seq_len": 168,
+      "horizon": 24,
+      "response_input": "raw",
+      "selection_objective": "balanced"
+    }
+  }
+}
