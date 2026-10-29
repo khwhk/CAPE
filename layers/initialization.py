@@ -1,9 +1,11 @@
 """Preserve the original seeded initialization before replacing temporary layers.
 These temporary modules are discarded; they are not prediction branches.
 """
+
 import torch
 from torch import nn
 from .embedding import TransformerDiffusionConfig
+
 
 class _ConditionTransformer(nn.Module):
     def __init__(self, config: TransformerDiffusionConfig) -> None:

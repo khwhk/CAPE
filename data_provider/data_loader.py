@@ -1,8 +1,10 @@
-"""Chronological splits, training-only scaling, and complete rolling windows."""
+"""Chronological splits and training-prefix scaling."""
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, Subset
+
 
 def read_data(path: str, nrows=None) -> pd.DataFrame:
     """
@@ -83,8 +85,13 @@ class ForecastWindows(Dataset):
         origin = self.origins[index]
         return (
             self.values[origin - self.seq_len : origin],
-            (np.zeros((self.horizon, self.values.shape[1] - 1), dtype=self.values.dtype)
-             if self.future_mode == "history" else self.values[origin : origin + self.horizon, 1:]),
+            (
+                np.zeros(
+                    (self.horizon, self.values.shape[1] - 1), dtype=self.values.dtype
+                )
+                if self.future_mode == "history"
+                else self.values[origin : origin + self.horizon, 1:]
+            ),
             self.values[origin : origin + self.horizon, :1],
         )
 
@@ -94,9 +101,11 @@ def load_windows(args):
     frame = frame[[args.target] + [c for c in frame.columns if c != args.target]]
     if getattr(args, "calendar", False):
         import pandas as pd
+
         dates = pd.DatetimeIndex(frame.index)
         for name, phase in (
-            ("hour", dates.hour / 24), ("weekday", dates.dayofweek / 7),
+            ("hour", dates.hour / 24),
+            ("weekday", dates.dayofweek / 7),
             ("annual", (dates.dayofyear - 1) / 365.25),
         ):
             frame["calendar_" + name + "_sin"] = np.sin(2 * np.pi * phase)
@@ -117,8 +126,14 @@ def load_windows(args):
     if args.evaluate_test:
         boundaries["test"] = (tv_end, len(frame))
     datasets = {
-        name: ForecastWindows(values, start, end, args.seq_len, args.horizon,
-                              getattr(args, "future_mode", "realized"))
+        name: ForecastWindows(
+            values,
+            start,
+            end,
+            args.seq_len,
+            args.horizon,
+            getattr(args, "future_mode", "realized"),
+        )
         for name, (start, end) in boundaries.items()
     }
     metadata = {
@@ -135,11 +150,15 @@ def load_windows(args):
     }
     if getattr(args, "lag_grid", "fixed") == "auto":
         import pandas as pd
+
         spacing = np.median(np.diff(pd.DatetimeIndex(frame.index).asi8)) / 3.6e12
         periods = (24, 168, 720, 1440) if spacing >= 24 else (24, 168)
-        metadata["lag_candidates"] = sorted(set(
-            [0, 1, 3, 6, 12, 24] + [max(1, round(hours / spacing)) for hours in periods]
-        ))
+        metadata["lag_candidates"] = sorted(
+            set(
+                [0, 1, 3, 6, 12, 24]
+                + [max(1, round(hours / spacing)) for hours in periods]
+            )
+        )
     return datasets, metadata
 
 

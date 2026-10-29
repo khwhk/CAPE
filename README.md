@@ -1,66 +1,92 @@
-# LAD
+# CAPE
 
-Probabilistic time series forecasting with exogenous variables, using lag alignment
-and state-conditioned diffusion response. No pretrained forecasting model is required.
+Condition-Aligned Probabilistic Modeling for Time Series Forecasting with Exogenous Variables.
 
-## 1. Installation
-
-Tested with Python 3.8, PyTorch 2.4.1 and CUDA 12.1.
+## Installation
 
 ```bash
-conda create -n lad python=3.8 -y
-conda activate lad
+git clone https://github.com/khwhk/LAD.git
+cd LAD
+conda env create -f environment.yml
+conda activate cape
+```
+
+Alternatively:
+
+```bash
+conda create -n cape python=3.8 -y
+conda activate cape
 pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cu121
 pip install -r requirements.txt
 ```
 
-## 2. Data
+## Data
 
-Download the [preprocessed datasets](https://drive.google.com/file/d/1K2AvogpOpSz1PiQ53dPchzGv_PqlCWAK/view?usp=sharing)
-and place their CSV files under `dataset/forecasting/`.
+Download the [datasets](https://drive.google.com/file/d/1K2AvogpOpSz1PiQ53dPchzGv_PqlCWAK/view?usp=sharing)
+and place the CSV files in `dataset/forecasting/`.
 
 Experimental settings follow [DAG](https://github.com/decisionintelligence/DAG).
 
-## 3. Run
+## Run CAPE
 
 ```bash
-# Known future covariates; three seeds, short horizon
-bash scripts/w_future/run.sh Sdwpfh1 short
+# Known future exogenous variables
+bash scripts/w_future/Sdwpfh1.sh short
+bash scripts/w_future/Sdwpfh1.sh long
 
-# Historical covariates only
-bash scripts/wo_future/run.sh Sdwpfh1 short
+# Historical exogenous variables only
+bash scripts/wo_future/Sdwpfh1.sh short
+bash scripts/wo_future/Sdwpfh1.sh long
 
-# Long horizon on another GPU
-CUDA_VISIBLE_DEVICES=1 bash scripts/wo_future/run.sh BE long
+# Choose a GPU
+CUDA_VISIBLE_DEVICES=1 bash scripts/wo_future/Energy.sh long
 ```
 
-Supported datasets: `NP`, `PJM`, `BE`, `FR`, `DE`, `Energy`, `Sdwpfm1`,
-`Sdwpfm2`, `Sdwpfh1`, `Sdwpfh2`, `Colbun`, `Rapel`. Each supports `short` and `long`.
+Both script directories include `NP`, `PJM`, `BE`, `FR`, `DE`, `Energy`,
+`Sdwpfm1`, `Sdwpfm2`, `Sdwpfh1`, `Sdwpfh2`, `Colbun`, and `Rapel`.
+Each command runs the stored best configuration with seeds **1, 2, 3**.
 
-Settings are in `scripts/{w_future,wo_future}/presets.json`. Override them with:
+The shared entry point supports the same settings:
 
 ```bash
-python run.py --mode wo_future --dataset BE --length short --seeds 1 2 3 \
-  --evaluate-test --set lr=0.001 batch_size=64
+bash scripts/w_future/run.sh Colbun short
+bash scripts/wo_future/run.sh Colbun long
+
+python run.py --mode wo_future --dataset NP --length short --seeds 1 2 3 \
+  --evaluate-test --output-dir results/run_2
 ```
 
-For a quick CPU pipeline check, run `python run.py --device cpu --seeds 1 --smoke`.
-Test data is evaluated only with `--evaluate-test` (enabled by the shell scripts).
-Each run saves a checkpoint, configuration, history and MSE/MAE/CRPS/QICE;
-`aggregate.json` reports seed means and standard deviations. Use a new
-`--output-dir` when rerunning. MSE/MAE use the actual sample mean, without recentering.
+Results are saved under `results/<mode>/<dataset>/<length>/`.
+`aggregate.json` contains the mean and standard deviation of MSE, MAE, CRPS, and QICE.
+Use a fresh `--output-dir` when rerunning.
 
-`w_future` supplies the dataset's true future covariates; `wo_future` never reads
-them as model inputs. The scripts train standalone models. Archived multi-stage
-search results are not claimed as from-scratch reproductions by these scripts.
+```bash
+# Evaluate a saved final-stage checkpoint
+python run.py --mode wo_future --dataset NP --length short --seeds 1 \
+  --checkpoint path/to/model.pt --evaluate-test --output-dir results/evaluation
 
-## Code
+# Small CPU pipeline check
+python run.py --mode w_future --dataset Colbun --length short \
+  --device cpu --seeds 1 --smoke --evaluate-test --output-dir results/smoke
+```
 
-`models/` builds LAD; `layers/` contains the backbone, lag alignment and state
-response; `data_provider/`, `exp/` and `utils/` handle data, training and metrics.
-Data, weights, baselines and historical tuning logs are not bundled.
+## Run baselines
 
-## License
+```bash
+# Download baseline implementations and install their dependencies
+python scripts/baselines/run.py --model DAG --setup-only
+pip install -r external/DAG/requirements.txt
 
-MIT; see [LICENSE](LICENSE). The data-reader code is adapted from
-[DAG](https://github.com/decisionintelligence/DAG); its copyright notice is retained.
+# MODEL.sh MODE DATASET LENGTH
+bash scripts/baselines/DAG.sh w_future Sdwpfh1 short
+bash scripts/baselines/KITE.sh wo_future Sdwpfh1 long
+bash scripts/baselines/GCGNet.sh w_future NP short
+bash scripts/baselines/TimeXer.sh wo_future NP long
+bash scripts/baselines/PatchTST.sh w_future Colbun short
+bash scripts/baselines/DLinear.sh wo_future Colbun long
+
+# Choose a GPU
+bash scripts/baselines/KITE.sh w_future FR short --gpu 1
+```
+
+Baseline scripts also run seeds **1, 2, 3**. Outputs are saved under `results/baselines/`.

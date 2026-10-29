@@ -1,0 +1,23 @@
+diff --git a/ts_benchmark/baselines/kite/layers/flow_loss.py b/ts_benchmark/baselines/kite/layers/flow_loss.py
+index d2ea9ab..2e2b80f 100644
+--- a/ts_benchmark/baselines/kite/layers/flow_loss.py
++++ b/ts_benchmark/baselines/kite/layers/flow_loss.py
+@@ -129 +129 @@ class KITEFlowMatching(nn.Module):
+-    def sample(self, origin, x_exo, y_exo, prior, n_samples=10, method1=False, method2=True):
++    def sample(self, origin, x_exo, y_exo, prior, n_samples=10, method1=False, method2=True, return_samples=False):
+@@ -167,0 +168,2 @@ class KITEFlowMatching(nn.Module):
++        if return_samples:
++            return x_reshaped
+diff --git a/ts_benchmark/baselines/kite/models/KITEModel.py b/ts_benchmark/baselines/kite/models/KITEModel.py
+index d880c5e..91ed55a 100644
+--- a/ts_benchmark/baselines/kite/models/KITEModel.py
++++ b/ts_benchmark/baselines/kite/models/KITEModel.py
+@@ -67 +67 @@ class KITEModel(nn.Module):
+-    def inference(self, x_endo, x_exo, y_exo=None, num_samples=50):
++    def inference(self, x_endo, x_exo, y_exo=None, num_samples=50, return_samples=False):
+@@ -91 +91,4 @@ class KITEModel(nn.Module):
+-        y = self.flow_matching.sample(h_x, x_exo, y_exo, prior,n_samples = num_samples)
++        y = self.flow_matching.sample(h_x, x_exo, y_exo, prior,n_samples = num_samples, return_samples=return_samples)
++        if return_samples:
++            y = rearrange(y, '(b c) s t -> b s t c', c=c)
++            return y * torch.sqrt(seq_var[:, None]) + seq_mean[:, None]

@@ -20,7 +20,9 @@ def _to_tensor(value: Any, name: str) -> Tuple[torch.Tensor, bool]:
         try:
             tensor = torch.as_tensor(np.asarray(value))
         except (TypeError, ValueError) as exc:
-            raise TypeError("{} must be convertible to a numeric array".format(name)) from exc
+            raise TypeError(
+                "{} must be convertible to a numeric array".format(name)
+            ) from exc
     if not tensor.is_floating_point():
         tensor = tensor.float()
     if not torch.isfinite(tensor).all():
@@ -182,9 +184,9 @@ def quantile_interval_coverage_error(
         dtype=values.dtype,
     )
     boundaries = torch.quantile(flattened_samples, quantile_levels, dim=1)
-    membership = torch.sum(
-        flattened_truth.unsqueeze(0) > boundaries, dim=0
-    ).clamp(min=1, max=n_bins)
+    membership = torch.sum(flattened_truth.unsqueeze(0) > boundaries, dim=0).clamp(
+        min=1, max=n_bins
+    )
     counts = torch.bincount(membership - 1, minlength=n_bins).to(values.dtype)
     occupancy = counts / float(flattened_truth.numel())
     errors = torch.abs(occupancy - 1.0 / float(n_bins))
@@ -203,9 +205,7 @@ def evaluate_samples(
         "mae": float(sample_mae(samples, target, statistic="mean")),
         "crps": float(sample_crps(samples, target)),
         "qice": float(
-            quantile_interval_coverage_error(
-                samples, target, n_bins=qice_bins
-            )
+            quantile_interval_coverage_error(samples, target, n_bins=qice_bins)
         ),
     }
 

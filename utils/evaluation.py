@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 from .metrics import evaluate_samples
 
+
 def inputs(batch, args):
     past, future, target = (v.to(args.device) for v in batch)
     if args.future_mode == "history":
@@ -28,6 +29,7 @@ def score(model, data, args, seed, samples, point_only=False, blocks=1):
                 n_samples=samples,
                 seed=seed + i,
                 sample_batch_size=args.sample_batch_size,
+                noise_batch_size=getattr(args, "sampling_noise_batch_size", None),
             )
         forecasts.append(prediction.cpu())
         truths.append(target.cpu())
@@ -35,18 +37,25 @@ def score(model, data, args, seed, samples, point_only=False, blocks=1):
     forecasts, truths = torch.cat(forecasts), torch.cat(truths)
     metrics = evaluate_samples(forecasts, truths)
     if blocks > 1:
-        sections = [dict(origins=len(i), metrics=evaluate_samples(forecasts[i], truths[i]))
-                    for i in torch.tensor_split(torch.arange(len(truths)), blocks) if len(i)]
+        sections = [
+            dict(origins=len(i), metrics=evaluate_samples(forecasts[i], truths[i]))
+            for i in torch.tensor_split(torch.arange(len(truths)), blocks)
+            if len(i)
+        ]
         return metrics, sections
     return metrics
 
 
 def selection_value(metrics, args, reference):
     if getattr(args, "selection_objective", "crps") == "point":
-        return sum(.5 * metrics[name] / max(reference[name], 1e-8) for name in ("mse", "mae"))
+        return sum(
+            0.5 * metrics[name] / max(reference[name], 1e-8) for name in ("mse", "mae")
+        )
     if getattr(args, "selection_objective", "crps") == "balanced":
-        return sum(weight * metrics[name] / max(reference[name], 1e-8)
-                   for name, weight in (("mse", .45), ("mae", .35), ("crps", .20)))
+        return sum(
+            weight * metrics[name] / max(reference[name], 1e-8)
+            for name, weight in (("mse", 0.45), ("mae", 0.35), ("crps", 0.20))
+        )
     return metrics["crps"]
 
 
@@ -69,7 +78,7 @@ def aggregate_results(results):
                 "mean": float(np.mean(values)),
                 "std": float(np.std(values, ddof=1)) if len(values) > 1 else 0.0,
             }
-            for key in ("mse", "mae", "crps", "qice")
+            for key in results[0]["metrics"][split]
             for values in [[r["metrics"][split][key] for r in results]]
         }
         for split in results[0]["metrics"]

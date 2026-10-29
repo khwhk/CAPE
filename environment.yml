@@ -1,0 +1,14 @@
+name: cape
+channels:
+  - pytorch
+  - nvidia
+  - defaults
+dependencies:
+  - python=3.8
+  - pytorch=2.4.1
+  - pytorch-cuda=12.1
+  - pip
+  - pip:
+      - numpy==1.24.4
+      - pandas==1.5.3
+      - scikit-learn==1.3.2

@@ -3,6 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 from .embedding import sinusoidal_timestep_embedding
 
+
 class TrajectoryConditioner(nn.Module):
     """Channel trajectory tokens with history-anchored covariate alignment."""
 
@@ -71,6 +72,7 @@ class TrajectoryNoiseTransformer(nn.Module):
         encoded = self.encoder(torch.cat((context, target), 1))
         return self.output(encoded[:, -self.config.target_dim :]).transpose(1, 2)
 
+
 def patchify(value, patch_length):
     padding = (-value.shape[1]) % patch_length
     value = F.pad(value.transpose(1, 2), (0, padding), mode="replicate").transpose(1, 2)
@@ -79,11 +81,15 @@ def patchify(value, patch_length):
 
 def history_statistics(past):
     target = past[..., :1]
-    return torch.cat((
-        target[:, -1], target.mean(1),
-        target.var(1, unbiased=False).add(1e-5).sqrt(),
-        target[:, -1] - target[:, 0],
-    ), -1)
+    return torch.cat(
+        (
+            target[:, -1],
+            target.mean(1),
+            target.var(1, unbiased=False).add(1e-5).sqrt(),
+            target[:, -1] - target[:, 0],
+        ),
+        -1,
+    )
 
 
 class DualScaleDenoiser(nn.Module):
@@ -97,8 +103,13 @@ class DualScaleDenoiser(nn.Module):
         self.position = nn.Parameter(torch.randn(1, count, config.d_model) * 0.02)
         self.time = nn.Sequential(nn.Linear(config.d_model, config.d_model), nn.SiLU())
         layer = nn.TransformerEncoderLayer(
-            config.d_model, config.n_heads, config.d_ff, config.dropout,
-            activation="gelu", batch_first=True, norm_first=True,
+            config.d_model,
+            config.n_heads,
+            config.d_ff,
+            config.dropout,
+            activation="gelu",
+            batch_first=True,
+            norm_first=True,
         )
         self.encoder = nn.TransformerEncoder(
             layer, config.n_layers, norm=nn.LayerNorm(config.d_model)
@@ -109,10 +120,14 @@ class DualScaleDenoiser(nn.Module):
 
     def forward(self, noisy, guide, context, timesteps):
         global_context, history, future = context
-        global_prediction = self.global_denoiser(noisy, guide, global_context, timesteps)
+        global_prediction = self.global_denoiser(
+            noisy, guide, global_context, timesteps
+        )
         target = self.target(patchify(noisy, self.patch_length)) + future
-        time = self.time(sinusoidal_timestep_embedding(timesteps, self.config.d_model))[:, None]
+        time = self.time(sinusoidal_timestep_embedding(timesteps, self.config.d_model))[
+            :, None
+        ]
         tokens = torch.cat((history, target), 1) + self.position + time
-        hidden = self.encoder(tokens)[:, history.shape[1]:]
-        local = self.output(hidden).reshape(len(noisy), -1, 1)[:, :self.config.horizon]
+        hidden = self.encoder(tokens)[:, history.shape[1] :]
+        local = self.output(hidden).reshape(len(noisy), -1, 1)[:, : self.config.horizon]
         return global_prediction + self.local_gate.tanh() * local

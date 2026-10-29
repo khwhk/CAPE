@@ -16,3 +16,5 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
+external/
+.pytest_cache/

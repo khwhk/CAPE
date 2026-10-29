@@ -1,6 +1,8 @@
-"""History-guided soft lag alignment of exogenous conditions."""
+"""Lag-Aligned Conditioning (LAC)."""
+
 import torch
 from torch import nn
+
 
 class LagTransport(nn.Module):
     """Align exogenous trajectory tokens, without an extra target-output head."""
@@ -10,11 +12,15 @@ class LagTransport(nn.Module):
         self.channels = config.future_cond_dim
         self.preserve_norm = preserve_norm
         self.detrend = detrend
-        self.temperature = 1.
-        self.recent_fraction = 1.
-        self.uniform_mix = 0.
+        self.temperature = 1.0
+        self.recent_fraction = 1.0
+        self.uniform_mix = 0.0
         lags = torch.tensor(
-            [v for v in (lag_candidates or (0, 1, 3, 6, 12, 24)) if v <= config.seq_len // 2]
+            [
+                v
+                for v in (lag_candidates or (0, 1, 3, 6, 12, 24))
+                if v <= config.seq_len // 2
+            ]
         )
         self.register_buffer("lags", lags)
         self.register_buffer(
@@ -33,17 +39,27 @@ class LagTransport(nn.Module):
         lagged = past[..., 1:][:, self.history_indices].permute(0, 1, 3, 2)
         if self.detrend:
             target, lagged = target.diff(dim=1), lagged.diff(dim=1)
+
         def correlate(y, z):
             y, z = y - y.mean(1, keepdim=True), z - z.mean(1, keepdim=True)
-            return (y * z).sum(1) / (y.square().sum(1) * z.square().sum(1) + 1e-8).sqrt()
+            return (y * z).sum(1) / (
+                y.square().sum(1) * z.square().sum(1) + 1e-8
+            ).sqrt()
+
         correlation = correlate(target, lagged)
         if self.recent_fraction < 1:
             recent = max(2, int(target.shape[1] * self.recent_fraction))
-            correlation = .5 * (correlation + correlate(target[:, -recent:], lagged[:, -recent:]))
+            correlation = 0.5 * (
+                correlation + correlate(target[:, -recent:], lagged[:, -recent:])
+            )
         correlation = correlation.clamp(-1, 1)
-        weights = ((self.lag_logits + 2 * correlation.abs()) / self.temperature).softmax(-1)
+        weights = (
+            (self.lag_logits + 2 * correlation.abs()) / self.temperature
+        ).softmax(-1)
         if self.uniform_mix:
-            weights = (1 - self.uniform_mix) * weights + self.uniform_mix / weights.shape[-1]
+            weights = (
+                1 - self.uniform_mix
+            ) * weights + self.uniform_mix / weights.shape[-1]
         scales = (
             past.var(1, keepdim=True, unbiased=False).add(1e-5).sqrt().clamp_min(0.1)
         )

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import torch
 from torch.nn import functional as F
 
+
 def make_beta_schedule(
     schedule: str = "cosine",
     num_timesteps: int = 20,
