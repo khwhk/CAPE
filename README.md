@@ -5,8 +5,8 @@ Condition-Aligned Probabilistic Modeling for Time Series Forecasting with Exogen
 ## Installation
 
 ```bash
-git clone https://github.com/khwhk/LAD.git
-cd LAD
+git clone https://github.com/khwhk/CAPE.git
+cd CAPE
 conda env create -f environment.yml
 conda activate cape
 ```
